@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="module_name">锁屏指纹</string>
+    <string name="module_description">设置澎湃 OS 4 锁屏亮屏或轻点后的指纹图标显示时长。</string>
+    <string name="duration_title">图标显示时长</string>
+    <string name="duration_value">%1$d 秒</string>
+    <string name="duration_min">1 秒</string>
+    <string name="duration_max">20 秒</string>
+    <string name="decrease_duration">减少一秒</string>
+    <string name="increase_duration">增加一秒</string>
+    <string name="duration_hint">亮屏、轻点锁屏或按下指纹区时，按所选时长重新计时。</string>
+    <string name="sync_waiting">等待连接 LSPosed。启用模块后会同步设置。</string>
+    <string name="sync_saving">正在同步到 LSPosed…</string>
+    <string name="sync_synced">已同步到 LSPosed</string>
+    <string name="sync_failed">已保存在手机上。重新打开此页面可重试同步。</string>
+</resources>
