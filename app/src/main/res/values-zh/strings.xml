@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="module_name">锁屏指纹</string>
-    <string name="module_description">设置澎湃 OS 4 锁屏指纹图标的抬起、亮屏、点击和触摸触发方式。</string>
+    <string name="module_description">设置澎湃 OS 4 锁屏指纹图标的显示方式，并自定义锁屏和息屏图标的外观。</string>
     <string name="trigger_title">显示方式</string>
     <string name="show_on_pickup">抬起显示</string>
     <string name="show_on_wake">亮屏显示</string>
@@ -19,4 +18,30 @@
     <string name="sync_saving">正在同步到 LSPosed…</string>
     <string name="sync_synced">已同步到 LSPosed</string>
     <string name="sync_failed">已保存在手机上。重新打开此页面可重试同步。</string>
+    <string name="restart_scopes">重启全部作用域</string>
+    <string name="restart_hint">设置完成后，请点右上角重启作用域。</string>
+    <string name="restarting_scopes">正在重启作用域…</string>
+    <string name="scopes_restarted">已重启全部作用域。</string>
+    <string name="restart_root_required">请在 Root 管理器中给 HyperFingerprint 授予 Root 权限后重试。</string>
+    <string name="restart_failed">未能确认系统界面已重启，请重试。</string>
+    <string name="restart_timed_out">操作超时，请检查 Root 授权后重试。</string>
+    <string name="icon_title">指纹图标</string>
+    <string name="icon_system">系统图标</string>
+    <string name="icon_custom">自定义图标</string>
+    <string name="icon_preview">自定义指纹图标预览</string>
+    <string name="choose_icon">选择图片</string>
+    <string name="restore_icon">恢复系统图标</string>
+    <string name="icon_size_title">图标大小</string>
+    <string name="icon_size_value">%1$.1f×</string>
+    <string name="opacity_title">图标不透明度</string>
+    <string name="opacity_value">%1$d%%</string>
+    <string name="icon_hint">亮屏锁屏和息屏共用图标与大小。不透明度仅用于亮屏锁屏，设为 0% 时亮屏图标不可见。</string>
+    <string name="crop_title">裁剪指纹图标</string>
+    <string name="crop_hint">拖动图片或双指缩放，保留 1:1 方框内的部分。</string>
+    <string name="apply_crop">使用此裁剪</string>
+    <string name="icon_loading">正在打开图片…</string>
+    <string name="icon_saving">正在保存图标…</string>
+    <string name="icon_picker_failed">手机上没有可用的图片选择器。</string>
+    <string name="icon_load_failed">无法打开这张图片，请返回并重新选择。</string>
+    <string name="icon_save_failed">未能保存图标，请重试。</string>
 </resources>

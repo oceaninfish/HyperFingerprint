@@ -11,8 +11,8 @@ android {
         applicationId = "io.fingerprintfiveseconds.hyperos"
         minSdk = 36
         targetSdk = 37
-        versionCode = 4
-        versionName = "1.3.0"
+        versionCode = 10
+        versionName = "1.7.1"
     }
 
     compileOptions {

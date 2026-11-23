@@ -22,6 +22,7 @@ import java.util.WeakHashMap;
 final class SystemUiState implements DisplayManager.DisplayListener {
     private static final long PICKUP_WAKE_GRACE_MS = 2_000;
     private final Handler main = new Handler(Looper.getMainLooper());
+    private final FingerprintAppearance appearance;
     private final RevealWindow window = new RevealWindow();
     private final Set<View> painters = Collections.newSetFromMap(new WeakHashMap<>());
     private final Runnable expire = this::redraw;
@@ -41,6 +42,10 @@ final class SystemUiState implements DisplayManager.DisplayListener {
     private boolean screenOn;
     private boolean keyguardVisible;
     private boolean receivedKeyguardState;
+
+    SystemUiState(FingerprintAppearance appearance) {
+        this.appearance = appearance;
+    }
 
     void watchSettings(SharedPreferences prefs) {
         if (settingsPrefs != null) {
@@ -62,6 +67,9 @@ final class SystemUiState implements DisplayManager.DisplayListener {
         if (!next.equals(settings)) {
             settings = next;
             window.setDuration(next.duration());
+            if (appearance != null) {
+                appearance.update(next, main, this::redraw);
+            }
             if (!next.tap()) {
                 trackingTap = false;
             }
@@ -179,8 +187,8 @@ final class SystemUiState implements DisplayManager.DisplayListener {
         }
     }
 
-    boolean shouldHide() {
-        return window.shouldHide(SystemClock.uptimeMillis());
+    long deadline() {
+        return window.deadline();
     }
 
     private void updateWindow() {

@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "FingerprintFiveSeconds"
+rootProject.name = "HyperFingerprint"
 include(":app")

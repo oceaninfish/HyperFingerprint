@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="module_name">Lock screen fingerprint</string>
-    <string name="module_description">Show the HyperOS 4 lock screen fingerprint icon after lifting the phone, waking the screen, or touching it.</string>
+    <string name="module_name" translatable="false">HyperFingerprint</string>
+    <string name="module_description">Customize when the HyperOS 4 lock screen fingerprint icon appears and how it looks on the lock screen and always-on display.</string>
     <string name="trigger_title">Show when</string>
     <string name="show_on_pickup">Phone is lifted</string>
     <string name="show_on_wake">Screen wakes</string>
@@ -19,4 +19,30 @@
     <string name="sync_saving">Syncing to LSPosed…</string>
     <string name="sync_synced">Synced to LSPosed</string>
     <string name="sync_failed">Saved on this phone. Reopen this page to try syncing again.</string>
+    <string name="restart_scopes">Restart all scoped processes</string>
+    <string name="restart_hint">After changing settings, tap the restart icon in the upper right.</string>
+    <string name="restarting_scopes">Restarting scoped processes…</string>
+    <string name="scopes_restarted">Scoped processes restarted.</string>
+    <string name="restart_root_required">Grant this app root access in your root manager to restart scoped processes.</string>
+    <string name="restart_failed">System UI did not restart. Try again.</string>
+    <string name="restart_timed_out">Timed out. Check root authorization and try again.</string>
+    <string name="icon_title">Fingerprint icon</string>
+    <string name="icon_system">System icon</string>
+    <string name="icon_custom">Custom icon</string>
+    <string name="icon_preview">Custom fingerprint icon preview</string>
+    <string name="choose_icon">Choose image</string>
+    <string name="restore_icon">Restore default</string>
+    <string name="icon_size_title">Icon size</string>
+    <string name="icon_size_value">%1$.1f×</string>
+    <string name="opacity_title">Icon opacity</string>
+    <string name="opacity_value">%1$d%%</string>
+    <string name="icon_hint">The lit lock screen and always-on display share the icon and size. Opacity only applies to the lit lock screen, where 0% makes the icon invisible.</string>
+    <string name="crop_title">Crop fingerprint icon</string>
+    <string name="crop_hint">Drag or pinch to fit the image inside the 1:1 frame.</string>
+    <string name="apply_crop">Use this crop</string>
+    <string name="icon_loading">Opening image…</string>
+    <string name="icon_saving">Saving icon…</string>
+    <string name="icon_picker_failed">No image picker is available.</string>
+    <string name="icon_load_failed">Could not open this image. Go back and choose another one.</string>
+    <string name="icon_save_failed">Could not save this icon. Try again.</string>
 </resources>

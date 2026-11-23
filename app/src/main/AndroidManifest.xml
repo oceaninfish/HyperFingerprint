@@ -7,6 +7,10 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/module_name"
         android:theme="@style/SettingsTheme">
+        <activity
+            android:name=".IconCropActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:exported="false" />
         <activity android:name=".SettingsActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
