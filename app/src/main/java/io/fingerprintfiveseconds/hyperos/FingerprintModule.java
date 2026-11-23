@@ -95,9 +95,9 @@ public final class FingerprintModule extends XposedModule {
                 Object result = chain.proceed();
                 if (Looper.myLooper() == Looper.getMainLooper()) {
                     try {
-                        state.watchDuration(getRemotePreferences(DurationSetting.GROUP));
+                        state.watchSettings(getRemotePreferences(DurationSetting.GROUP));
                     } catch (RuntimeException error) {
-                        log(Log.WARN, TAG, "Could not read LSPosed duration settings", error);
+                        log(Log.WARN, TAG, "Could not read LSPosed icon settings", error);
                     }
                     state.start((Context) chain.getThisObject());
                     log(Log.INFO, TAG, "Watching the default display and lock screen taps");

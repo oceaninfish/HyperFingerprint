@@ -24,7 +24,7 @@ public final class SettingsApplication extends Application
 
     private SharedPreferences local;
     private XposedService service;
-    private int duration;
+    private IconSettings current;
     private long revision;
     private SyncStatus status = SyncStatus.WAITING;
 
@@ -32,7 +32,7 @@ public final class SettingsApplication extends Application
     public void onCreate() {
         super.onCreate();
         local = createDeviceProtectedStorageContext().getSharedPreferences(DurationSetting.GROUP, MODE_PRIVATE);
-        duration = DurationSetting.clamp(local.getInt(DurationSetting.KEY, DurationSetting.DEFAULT));
+        current = IconSettings.read(local);
         XposedServiceHelper.registerListener(this);
     }
 
@@ -54,8 +54,8 @@ public final class SettingsApplication extends Application
         });
     }
 
-    int duration() {
-        return duration;
+    IconSettings current() {
+        return current;
     }
 
     SyncStatus status() {
@@ -76,10 +76,18 @@ public final class SettingsApplication extends Application
     }
 
     void saveDuration(int seconds) {
-        int next = DurationSetting.clamp(seconds);
-        if (next != duration) {
-            duration = next;
-            local.edit().putInt(DurationSetting.KEY, next).apply();
+        save(new IconSettings(DurationSetting.clamp(seconds), current.pickup(), current.wake(),
+                current.tap(), current.touch()));
+    }
+
+    void saveTriggers(boolean pickup, boolean wake, boolean tap, boolean touch) {
+        save(new IconSettings(current.duration(), pickup, wake, tap, touch));
+    }
+
+    private void save(IconSettings next) {
+        if (!next.equals(current)) {
+            current = next;
+            next.writeTo(local).apply();
             sync();
         }
     }
@@ -87,14 +95,14 @@ public final class SettingsApplication extends Application
     private void sync() {
         long request = ++revision;
         XposedService target = service;
-        int seconds = duration;
+        IconSettings snapshot = current;
         if (target == null) {
             publish(SyncStatus.WAITING);
             return;
         }
         publish(SyncStatus.SAVING);
         writer.execute(() -> {
-            boolean saved = writeDuration(target, seconds);
+            boolean saved = writeSettings(target, snapshot);
             main.post(() -> {
                 if (revision == request) {
                     publish(saved ? SyncStatus.SYNCED : SyncStatus.FAILED);
@@ -103,12 +111,11 @@ public final class SettingsApplication extends Application
         });
     }
 
-    private static boolean writeDuration(XposedService target, int seconds) {
+    private static boolean writeSettings(XposedService target, IconSettings snapshot) {
         try {
-            return target.getRemotePreferences(DurationSetting.GROUP).edit()
-                    .putInt(DurationSetting.KEY, seconds).commit();
+            return snapshot.writeTo(target.getRemotePreferences(DurationSetting.GROUP)).commit();
         } catch (RuntimeException error) {
-            Log.w(FingerprintModule.TAG, "Could not sync the icon duration", error);
+            Log.w(FingerprintModule.TAG, "Could not sync the icon settings", error);
             return false;
         }
     }

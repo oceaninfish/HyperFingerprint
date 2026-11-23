@@ -3,6 +3,7 @@ package io.fingerprintfiveseconds.hyperos;
 import android.app.KeyguardManager;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.hardware.SensorManager;
 import android.hardware.display.DisplayManager;
 import android.os.Handler;
 import android.os.Looper;
@@ -19,46 +20,55 @@ import java.util.Set;
 import java.util.WeakHashMap;
 
 final class SystemUiState implements DisplayManager.DisplayListener {
+    private static final long PICKUP_WAKE_GRACE_MS = 2_000;
     private final Handler main = new Handler(Looper.getMainLooper());
     private final RevealWindow window = new RevealWindow();
     private final Set<View> painters = Collections.newSetFromMap(new WeakHashMap<>());
     private final Runnable expire = this::redraw;
-    private final SharedPreferences.OnSharedPreferenceChangeListener durationListener = (prefs, key) -> {
-        if (key == null || DurationSetting.KEY.equals(key)) {
-            main.post(() -> readDuration(prefs));
+    private final SharedPreferences.OnSharedPreferenceChangeListener settingsListener = (prefs, key) -> {
+        if (IconSettings.isSettingKey(key)) {
+            main.post(() -> readSettings(prefs));
         }
     };
 
     private DisplayManager displays;
-    private SharedPreferences durationPrefs;
-    private int loadedSeconds;
+    private SharedPreferences settingsPrefs;
+    private IconSettings settings = IconSettings.DEFAULTS;
+    private PickupMonitor pickupMonitor;
+    private long pendingPickup = -1;
     private GestureDetector taps;
     private boolean trackingTap;
     private boolean screenOn;
     private boolean keyguardVisible;
     private boolean receivedKeyguardState;
 
-    void watchDuration(SharedPreferences prefs) {
-        if (durationPrefs != null) {
+    void watchSettings(SharedPreferences prefs) {
+        if (settingsPrefs != null) {
             return;
         }
-        prefs.registerOnSharedPreferenceChangeListener(durationListener);
-        durationPrefs = prefs;
-        readDuration(prefs);
+        prefs.registerOnSharedPreferenceChangeListener(settingsListener);
+        settingsPrefs = prefs;
+        readSettings(prefs);
     }
 
-    private void readDuration(SharedPreferences prefs) {
-        int seconds;
+    private void readSettings(SharedPreferences prefs) {
+        IconSettings next;
         try {
-            seconds = DurationSetting.clamp(prefs.getInt(DurationSetting.KEY, DurationSetting.DEFAULT));
+            next = IconSettings.read(prefs);
         } catch (RuntimeException error) {
-            Log.w(FingerprintModule.TAG, "Could not read the icon duration", error);
+            Log.w(FingerprintModule.TAG, "Could not read the icon settings", error);
             return;
         }
-        if (seconds != loadedSeconds) {
-            window.setDuration(seconds);
-            loadedSeconds = seconds;
-            Log.i(FingerprintModule.TAG, "Lock screen icon duration: " + seconds + " s");
+        if (!next.equals(settings)) {
+            settings = next;
+            window.setDuration(next.duration());
+            if (!next.tap()) {
+                trackingTap = false;
+            }
+            if (!next.pickup()) {
+                pendingPickup = -1;
+            }
+            updatePickupMonitor();
         }
     }
 
@@ -74,6 +84,14 @@ final class SystemUiState implements DisplayManager.DisplayListener {
             KeyguardManager keyguard = context.getSystemService(KeyguardManager.class);
             keyguardVisible = keyguard != null && keyguard.isKeyguardLocked();
         }
+        SensorManager sensors = context.getSystemService(SensorManager.class);
+        if (sensors != null) {
+            try {
+                pickupMonitor = new PickupMonitor(sensors, main, this::onPickup);
+            } catch (RuntimeException error) {
+                Log.w(FingerprintModule.TAG, "Could not initialize the pickup sensor", error);
+            }
+        }
         taps = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
             @Override
             public boolean onDown(MotionEvent event) {
@@ -82,7 +100,7 @@ final class SystemUiState implements DisplayManager.DisplayListener {
 
             @Override
             public boolean onSingleTapUp(MotionEvent event) {
-                reveal(SystemClock.uptimeMillis());
+                revealFromTap(SystemClock.uptimeMillis());
                 return true;
             }
         }, main);
@@ -98,6 +116,9 @@ final class SystemUiState implements DisplayManager.DisplayListener {
         }
         receivedKeyguardState = true;
         keyguardVisible = visible;
+        if (!visible) {
+            pendingPickup = -1;
+        }
         updateWindow();
     }
 
@@ -121,15 +142,20 @@ final class SystemUiState implements DisplayManager.DisplayListener {
     }
 
     void observeTouch(View shade, MotionEvent event) {
-        if (Looper.myLooper() != main.getLooper() || taps == null || !window.isActive()) {
+        if (Looper.myLooper() != main.getLooper() || taps == null || !window.isActive()
+                || !(settings.tap() || settings.touch())) {
             return;
         }
         int action = event.getActionMasked();
         if (action == MotionEvent.ACTION_DOWN) {
             Display display = shade.getDisplay();
-            trackingTap = display != null && display.getDisplayId() == Display.DEFAULT_DISPLAY
+            boolean fingerDown = display != null && display.getDisplayId() == Display.DEFAULT_DISPLAY
                     && event.isFromSource(InputDevice.SOURCE_TOUCHSCREEN)
                     && event.getToolType(0) == MotionEvent.TOOL_TYPE_FINGER;
+            trackingTap = fingerDown && settings.tap();
+            if (fingerDown && settings.touch()) {
+                reveal(SystemClock.uptimeMillis());
+            }
         }
         if (trackingTap) {
             taps.onTouchEvent(event);
@@ -141,9 +167,9 @@ final class SystemUiState implements DisplayManager.DisplayListener {
 
     void sensorTouched(long now) {
         if (Looper.myLooper() == main.getLooper()) {
-            reveal(now);
+            revealFromSensorTouch(now);
         } else {
-            main.post(() -> reveal(now));
+            main.post(() -> revealFromSensorTouch(now));
         }
     }
 
@@ -158,9 +184,45 @@ final class SystemUiState implements DisplayManager.DisplayListener {
     }
 
     private void updateWindow() {
-        if (window.update(screenOn, keyguardVisible, SystemClock.uptimeMillis())) {
+        boolean pickupNearWake = pendingPickup >= 0
+                && SystemClock.elapsedRealtime() - pendingPickup <= PICKUP_WAKE_GRACE_MS;
+        boolean revealOnEntry = settings.wake() || (settings.pickup() && pickupNearWake);
+        if (window.update(screenOn, keyguardVisible, revealOnEntry, SystemClock.uptimeMillis())) {
+            pendingPickup = -1;
             trackingTap = false;
             scheduleRedraw();
+        }
+        updatePickupMonitor();
+    }
+
+    private void updatePickupMonitor() {
+        if (pickupMonitor != null) {
+            pickupMonitor.update(settings.pickup() && keyguardVisible, screenOn);
+        }
+    }
+
+    private void onPickup(long elapsed) {
+        if (!settings.pickup() || !keyguardVisible
+                || SystemClock.elapsedRealtime() - elapsed > PICKUP_WAKE_GRACE_MS) {
+            return;
+        }
+        if (window.isActive()) {
+            reveal(SystemClock.uptimeMillis());
+        } else {
+            // If the system wakes the display for this lift, let pickup show the icon at wake.
+            pendingPickup = elapsed;
+        }
+    }
+
+    private void revealFromTap(long now) {
+        if (settings.tap()) {
+            reveal(now);
+        }
+    }
+
+    private void revealFromSensorTouch(long now) {
+        if (settings.tap() || settings.touch()) {
+            reveal(now);
         }
     }
 

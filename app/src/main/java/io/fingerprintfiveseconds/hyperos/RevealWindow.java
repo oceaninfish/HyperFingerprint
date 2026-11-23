@@ -10,7 +10,7 @@ final class RevealWindow {
     private boolean screenOn;
     private boolean keyguardVisible;
 
-    boolean update(boolean screenOn, boolean keyguardVisible, long now) {
+    boolean update(boolean screenOn, boolean keyguardVisible, boolean revealOnEntry, long now) {
         boolean wasActive = isActive();
         this.screenOn = screenOn;
         this.keyguardVisible = keyguardVisible;
@@ -18,12 +18,12 @@ final class RevealWindow {
             return false;
         }
         lastReveal = now;
-        deadline = isActive() ? now + durationMs : INACTIVE;
+        deadline = isActive() ? now + (revealOnEntry ? durationMs : 0) : INACTIVE;
         return true;
     }
 
     boolean reveal(long now) {
-        if (!isActive() || now <= lastReveal) {
+        if (!isActive() || now < lastReveal) {
             return false;
         }
         lastReveal = now;

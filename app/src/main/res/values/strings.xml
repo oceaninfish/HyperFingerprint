@@ -1,14 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="module_name">Lock screen fingerprint</string>
-    <string name="module_description">Choose how long the HyperOS 4 lock screen fingerprint icon stays visible after waking or tapping the screen.</string>
+    <string name="module_description">Show the HyperOS 4 lock screen fingerprint icon after lifting the phone, waking the screen, or touching it.</string>
+    <string name="trigger_title">Show when</string>
+    <string name="show_on_pickup">Phone is lifted</string>
+    <string name="show_on_wake">Screen wakes</string>
+    <string name="show_on_tap">Lock screen is tapped</string>
+    <string name="show_on_touch">Lock screen is touched</string>
+    <string name="touch_hint">Touch includes swipes and long presses. Choose at most one of touch or tap.</string>
     <string name="duration_title">Icon display duration</string>
     <string name="duration_value">%1$d s</string>
     <string name="duration_min">1 s</string>
     <string name="duration_max">20 s</string>
     <string name="decrease_duration">Decrease by one second</string>
     <string name="increase_duration">Increase by one second</string>
-    <string name="duration_hint">The timer starts when you wake the lock screen, tap it, or press the fingerprint sensor.</string>
+    <string name="duration_hint">Every enabled trigger restarts the timer on the lit lock screen.</string>
     <string name="sync_waiting">Waiting for LSPosed. Enable the module in LSPosed to sync your setting.</string>
     <string name="sync_saving">Syncing to LSPosed…</string>
     <string name="sync_synced">Synced to LSPosed</string>
